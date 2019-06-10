@@ -1,0 +1,7 @@
+        HAL_ADCEx_InjectedStart(&hadc1);
+        HAL_ADCEx_InjectedPollForConversion(&hadc1, 10000);
+        int adcTempValue = HAL_ADCEx_InjectedGetValue(&hadc1, 1);
+        int adcVrefValue = HAL_ADCEx_InjectedGetValue(&hadc1, 2);
+
+        HAL_GPIO_TogglePin(LD7_GPIO_Port,LD7_Pin);
+
