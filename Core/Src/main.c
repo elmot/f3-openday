@@ -68,6 +68,22 @@ static void MX_ADC1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+    const uint16_t adcCalib30 = *((uint16_t *) 0x1FFFF7B8);
+    const uint16_t adcCalib110 = *((uint16_t *) 0x1FFFF7C2);
+    const uint16_t adcCalibVref = *((uint16_t *) 0x1FFFF7BA);
+    static GPIO_TypeDef *LED_PORTS[4][2] = {
+            {LD4_GPIO_Port, LD9_GPIO_Port},
+            {LD6_GPIO_Port, LD7_GPIO_Port},
+            {LD5_GPIO_Port, LD8_GPIO_Port},
+            {LD3_GPIO_Port, LD10_GPIO_Port},
+    };
+    static const uint16_t LED_PINS[4][2] = {
+            {LD4_Pin, LD9_Pin},
+            {LD6_Pin, LD7_Pin},
+            {LD5_Pin, LD8_Pin},
+            {LD3_Pin, LD10_Pin},
+    };
+
   /* USER CODE END 1 */
   
 
@@ -101,6 +117,28 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+        HAL_ADCEx_InjectedStart(&hadc1);
+        HAL_ADCEx_InjectedPollForConversion(&hadc1, 1000);
+        double adcTempValue = HAL_ADCEx_InjectedGetValue(&hadc1, 1);
+        double adcVrefValue = HAL_ADCEx_InjectedGetValue(&hadc1, 2);
+
+        double temp =
+                30.0 + (adcTempValue * adcCalibVref / adcVrefValue - adcCalib30) * 80.0 / (adcCalib110 - adcCalib30);
+        int ledIndex;
+        if (temp < 22) {
+            ledIndex = 0;
+        } else if (temp < 24) {
+            ledIndex = 1;
+        } else if (temp < 26) {
+            ledIndex = 2;
+        } else {
+            ledIndex = 3;
+        }
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 2; ++j) {
+                HAL_GPIO_WritePin(LED_PORTS[i][j], LED_PINS[i][j], ledIndex == i ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            }
+        }
     }
 #pragma clang diagnostic pop
   /* USER CODE END 3 */
